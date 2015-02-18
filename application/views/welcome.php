@@ -49,16 +49,16 @@ $muted = (isset($_COOKIE['mute'])?$_COOKIE['mute']:0);
         </div>
       </div>
     </div>
-	
+
 
 	<div class="container">
-	
+
 		<?php
 		if($muted){
 			echo '<div class="row"><div class="span4 offset4 label label-important" style="padding:10px;margin-bottom:20px;text-align:center;">';
 			echo 'Sound muted for '.timespan(time(),$muted).' <span class="pull-right"><a href="?mute=0" style="color:white;"><i class="icon-music icon-white"></i> Unmute</a></span></div></div>';
 		}
-	
+
 		?>
 		<div class="row">
 				<?php
@@ -75,7 +75,7 @@ $muted = (isset($_COOKIE['mute'])?$_COOKIE['mute']:0);
 				<div class="span4">
 				<table class="table table-bordered table-condensed table-striped">
 					<tr><th colspan="4">
-						<a href="<?php echo $ui_url; ?>"><?php echo $name; ?></a> <i><?php echo $parsed_url['host']; ?></i>	
+						<a href="<?php echo $ui_url; ?>"><?php echo $name; ?></a> <i><?php echo $parsed_url['host']; ?></i>
 						<?php if(isset($cfg[$name]['username'])){echo '<i class="icon-lock icon-green" style="color:blue" title="Authenticated server connection"></i>';}?>
 						<span class="server-btns">
 							<a href="/control/stopall/<?php echo $name; ?>" class="btn btn-mini btn-inverse" type="button"><i class="icon-stop icon-white"></i> Stop all</a>
@@ -86,23 +86,23 @@ $muted = (isset($_COOKIE['mute'])?$_COOKIE['mute']:0);
 					<?php
 					$CI = &get_instance();
 					foreach($procs as $item){
-						
+
 						if($item['group'] != $item['name']) $item_name = $item['group'].":".$item['name'];
 						else $item_name = $item['name'];
-						
+
 						$check = $CI->_request($name,'readProcessStderrLog',array($item_name,-1000,0));
 						if(is_array($check)) $check = print_r($check,1);
 
 						if(!is_array($item)){ echo '<tr><td colspan="4">'.$item.'</td></tr>';continue;}
 						$pid = $uptime = '&nbsp;';
 						$status = $item['statename'];
-						if($status=='RUNNING'){
+						if($status==STATE_RUNNING){
 							$class = 'success';
 							list($pid,$uptime) = explode(",",$item['description']);
 						}
-						elseif($status=='STARTING') $class = 'info';
-						elseif($status=='FATAL') $class = 'important';
-						elseif($status=='STOPPED') $class = 'inverse';
+						elseif($status==STATE_STARTING) $class = 'info';
+						elseif($status==STATE_FATAL) $class = 'important';
+						elseif($status==STATE_STOPPED) $class = 'inverse';
 						else $class = 'error';
 
 						$uptime = str_replace("uptime ","",$uptime);
@@ -130,9 +130,9 @@ $muted = (isset($_COOKIE['mute'])?$_COOKIE['mute']:0);
 										<li><a href="zz">Stop</a></li>
 									</ul>
 								</div//-->
-								<?php if($status=='RUNNING'){ ?>
+								<?php if($status==STATE_RUNNING){ ?>
 								<a href="/control/stop/<?php echo $name.'/'.$item_name;?>" class="btn btn-mini btn-inverse" type="button"><i class="icon-stop icon-white"></i></a>
-								<?php } if($status=='STOPPED' || $status == 'EXITED'){ ?>
+								<?php } if(in_array($status, $this->config->item('restart_states'))){ ?>
 								<a href="/control/start/<?php echo $name.'/'.$item_name;?>" class="btn btn-mini btn-success" type="button"><i class="icon-play icon-white"></i></a>
 								<?php } ?>
 							</td>
@@ -141,7 +141,7 @@ $muted = (isset($_COOKIE['mute'])?$_COOKIE['mute']:0);
 					}
 
 					?>
-				</table>				
+				</table>
 			</div>
 				<?php
 				}
@@ -153,13 +153,13 @@ $muted = (isset($_COOKIE['mute'])?$_COOKIE['mute']:0);
 				}else{
 					echo '<title>Support center</title>';
 				}
-				
+
 				?>
 		</div>
 	</div>
 
     </div> <!-- /container -->
-	
+
 	<div class="footer">
 		<p>Powered by <a href="https://github.com/mlazarov/supervisord-monitor" target="_blank">Supervisord Monitor</a> | Page rendered in <strong>{elapsed_time}</strong> seconds</p>
 	</div>
@@ -202,7 +202,7 @@ $muted = (isset($_COOKIE['mute'])?$_COOKIE['mute']:0);
 		if($refresh<=0){
 			location.href="/";
 		}
-		
+
 	}
 	function nl2br (str, is_xhtml) {
 		var breakTag = (is_xhtml || typeof is_xhtml === 'undefined') ? '<br ' + '/>' : '<br>';

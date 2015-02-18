@@ -36,6 +36,12 @@ define('FOPEN_READ_WRITE_CREATE',				'a+b');
 define('FOPEN_WRITE_CREATE_STRICT',				'xb');
 define('FOPEN_READ_WRITE_CREATE_STRICT',		'x+b');
 
+define('STATE_STARTING', 'STARTING');
+define('STATE_RUNNING',  'RUNNING');
+define('STATE_STOPPING', 'STOPPING');
+define('STATE_STOPPED',  'STOPPED');
+define('STATE_EXITED',   'EXITED');
+define('STATE_FATAL',    'FATAL');
 
 /* End of file constants.php */
 /* Location: ./application/config/constants.php */

@@ -19,4 +19,8 @@ $config['supervisor_servers'] = array(
 
 $config['refresh'] = 10;
 
+$config['restart_states'] = array(
+    STATE_EXITED,
+    STATE_STOPPED,
+);
 ?>
