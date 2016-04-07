@@ -1,25 +1,19 @@
-<?php
-
-if(isset($_GET['mute'])){
-	$mute = ($_GET['mute']?(time()+600):0);
-	if($mute) setcookie('mute',$mute,$mute,'/');
-	else setcookie('mute',0,time()-1,'/');
-	Redirect();
-}
-$muted = (isset($_COOKIE['mute'])?$_COOKIE['mute']:0);
-?><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 	<meta charset="utf-8">
 	<title>Supervisord Monitoring</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<link type="text/css" rel="stylesheet" href="/css/bootstrap.min.css"/>
-	<link type="text/css" rel="stylesheet" href="/css/bootstrap-responsive.min.css"/>
-	<link type="text/css" rel="stylesheet" href="/css/custom.css"/>
-	<script type="text/javascript" src="/js/jquery-1.10.1.min.js"></script>
-	<script type="text/javascript" src="/js/bootstrap.min.js"></script>
+	<link type="text/css" rel="stylesheet" href="<?php echo site_url('/css/bootstrap.min.css');?>"/>
+	<link type="text/css" rel="stylesheet" href="<?php echo site_url('/css/bootstrap-responsive.min.css');?>"/>
+	<link type="text/css" rel="stylesheet" href="<?php echo site_url('/css/custom.css');?>"/>
+<script type="text/javascript" src="<?php echo site_url('/js/jquery-1.10.1.min.js');?>"></script>
+<script type="text/javascript" src="<?php echo site_url('/js/bootstrap.min.js');?>"></script>
 	<noscript>
+	<?php
+	if($this->config->item('refresh')){ ?>
 	<meta http-equiv="refresh" content="<?php echo $this->config->item('refresh');?>">
+	<?php } ?>
 	</noscript>
 </head>
 <body>
@@ -31,18 +25,18 @@ $muted = (isset($_COOKIE['mute'])?$_COOKIE['mute']:0);
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="brand" href="/">Support Center</a>
+		  <a class="brand" href="<?php echo site_url('');?>">Support Center</a>
           <div class="nav-collapse collapse">
             <ul class="nav">
-              <li class="active"><a href="/">Home</a></li>
-              <li><a href="?mute=<?php echo $muted?0:1;?>"><i class="icon-music icon-white"></i>&nbsp;<?php
+			<li class="active"><a href="<?php echo site_url();?>">Home</a></li>
+              <li><a href="?mute=<?php echo ($muted?-1:1);?>"><i class="icon-music icon-white"></i>&nbsp;<?php
 			if($muted){
 				echo "Unmute";
 			}else{
 				echo "Mute";
 			}
 		;?></a></li>
-		<li><a href="/">Refresh <b id="refresh">(<?php echo $this->config->item('refresh');?>)</b> &nbsp;</a></li>
+		<li><a href="<?php echo site_url();?>">Refresh <b id="refresh">(<?php echo $this->config->item('refresh');?>)</b> &nbsp;</a></li>
               <li><a href="mailto:martin@lazarov.bg">Contact</a></li>
             </ul>
           </div><!--/.nav-collapse -->
@@ -56,7 +50,7 @@ $muted = (isset($_COOKIE['mute'])?$_COOKIE['mute']:0);
 		<?php
 		if($muted){
 			echo '<div class="row"><div class="span4 offset4 label label-important" style="padding:10px;margin-bottom:20px;text-align:center;">';
-			echo 'Sound muted for '.timespan(time(),$muted).' <span class="pull-right"><a href="?mute=0" style="color:white;"><i class="icon-music icon-white"></i> Unmute</a></span></div></div>';
+			echo 'Sound muted for '.timespan(time(),$muted).' <span class="pull-right"><a href="?mute=-1" style="color:white;"><i class="icon-music icon-white"></i> Unmute</a></span></div></div>';
 		}
 
 		?>
@@ -65,23 +59,29 @@ $muted = (isset($_COOKIE['mute'])?$_COOKIE['mute']:0);
 				$alert = false;
 				foreach($list as $name=>$procs){
 					$parsed_url = parse_url($cfg[$name]['url']);
-                    if ( isset($cfg[$name]['username']) && isset($cfg[$name]['password']) ){
-                        $base_url = 'http://' . $cfg[$name]['username'] . ':' . $cfg[$name]['password'] . '@';
-                    }else{
-                        $base_url = 'http://';
-                    }
-                    $ui_url = $base_url . $parsed_url['host'] . ':' . $cfg[$name]['port']. '/';
+					if ( isset($cfg[$name]['username']) && isset($cfg[$name]['password']) ){
+						$base_url = 'http://' . $cfg[$name]['username'] . ':' . $cfg[$name]['password'] . '@';
+					}else{
+						$base_url = 'http://';
+					}
+					$ui_url = $base_url . $parsed_url['host'] . ':' . $cfg[$name]['port']. '/';
 				?>
-				<div class="span4">
+				<div class="span<?php echo ($this->config->item('supervisor_cols')==2?'6':'4');?>">
 				<table class="table table-bordered table-condensed table-striped">
 					<tr><th colspan="4">
-						<a href="<?php echo $ui_url; ?>"><?php echo $name; ?></a> <i><?php echo $parsed_url['host']; ?></i>
-						<?php if(isset($cfg[$name]['username'])){echo '<i class="icon-lock icon-green" style="color:blue" title="Authenticated server connection"></i>';}?>
-						<span class="server-btns">
-							<a href="/control/stopall/<?php echo $name; ?>" class="btn btn-mini btn-inverse" type="button"><i class="icon-stop icon-white"></i> Stop all</a>
-							<a href="/control/startall/<?php echo $name; ?>" class="btn btn-mini btn-success" type="button"><i class="icon-play icon-white"></i> Start all</a>
-							<a href="/control/restartall/<?php echo $name; ?>" class="btn btn-mini btn-primary" type="button"><i class="icon icon-refresh icon-white"></i> Restart all</a>
+						<a href="<?php echo $ui_url; ?>"><?php echo $name; ?></a> <?php if($this->config->item('show_host')){ ?><i><?php echo $parsed_url['host']; ?></i><?php } ?>
+						<?php
+						if(isset($cfg[$name]['username'])){echo '<i class="icon-lock icon-green" style="color:blue" title="Authenticated server connection"></i>';}
+						if(!isset($procs['error'])){
+						?>
+						<span class="server-btns pull-right">
+							<a href="<?php echo site_url('/control/stopall/'.$name); ?>" class="btn btn-mini btn-inverse" type="button"><i class="icon-stop icon-white"></i> Stop all</a>
+							<a href="<?php echo site_url('/control/startall/'.$name); ?>" class="btn btn-mini btn-success" type="button"><i class="icon-play icon-white"></i> Start all</a>
+							<a href="<?php echo site_url('/control/restartall/'.$name); ?>" class="btn btn-mini btn-primary" type="button"><i class="icon icon-refresh icon-white"></i> Restart all</a>
 						</span>
+						<?php
+						}
+						?>
 					</th></tr>
 					<?php
 					$CI = &get_instance();
@@ -92,8 +92,14 @@ $muted = (isset($_COOKIE['mute'])?$_COOKIE['mute']:0);
 
 						$check = $CI->_request($name,'readProcessStderrLog',array($item_name,-1000,0));
 						if(is_array($check)) $check = print_r($check,1);
+						
+						if(!is_array($item)){
+								// Not having array means that we have error.
+								echo '<tr><td colspan="4">'.$item.'</td></tr>';
+								echo '<tr><td colspan="4">For Troubleshooting <a href="https://github.com/mlazarov/supervisord-monitor#troubleshooting" target="_blank">check this guide</a></td></tr>';
+								continue;
+						}
 
-						if(!is_array($item)){ echo '<tr><td colspan="4">'.$item.'</td></tr>';continue;}
 						$pid = $uptime = '&nbsp;';
 						$status = $item['statename'];
 						if($status==STATE_RUNNING){
@@ -112,8 +118,9 @@ $muted = (isset($_COOKIE['mute'])?$_COOKIE['mute']:0);
 								echo $item_name;
 								if($check){
 									$alert = true;
-		echo '<span class="pull-right"><a href="/control/clear/'.$name.'/'.$item_name.'" id="'.$name.'_'.$item_name.'" onclick="return false" data-toggle="popover" data-message="'.htmlspecialchars($check).
-			'" data-original-title="'.$item_name.'@'.$name.'" class="pop btn btn-mini btn-danger"><img src="/img/alert_icon.png" /></a></span>';
+									echo '<span class="pull-right"><a href="'.site_url('/control/clear/'.$name.'/'.$item_name).'" id="'.$name.'_'.$item_name.
+											'" onclick="return false" data-toggle="popover" data-message="'.htmlspecialchars($check).'" data-original-title="'.
+											$item_name.'@'.$name.'" class="pop btn btn-mini btn-danger"><img src="/img/alert_icon.png" /></a></span>';
 								}
 								?>
 							</td>
@@ -131,9 +138,9 @@ $muted = (isset($_COOKIE['mute'])?$_COOKIE['mute']:0);
 									</ul>
 								</div//-->
 								<?php if($status==STATE_RUNNING){ ?>
-								<a href="/control/stop/<?php echo $name.'/'.$item_name;?>" class="btn btn-mini btn-inverse" type="button"><i class="icon-stop icon-white"></i></a>
+								<a href="<?php echo site_url('/control/stop/'.$name.'/'.$item_name);?>" class="btn btn-mini btn-inverse" type="button"><i class="icon-stop icon-white"></i></a>
 								<?php } if(in_array($status, $this->config->item('restart_states'))){ ?>
-								<a href="/control/start/<?php echo $name.'/'.$item_name;?>" class="btn btn-mini btn-success" type="button"><i class="icon-play icon-white"></i></a>
+								<a href="<?php echo site_url('/control/start/'.$name.'/'.$item_name);?>" class="btn btn-mini btn-success" type="button"><i class="icon-play icon-white"></i></a>
 								<?php } ?>
 							</td>
 						</tr>
@@ -145,8 +152,8 @@ $muted = (isset($_COOKIE['mute'])?$_COOKIE['mute']:0);
 			</div>
 				<?php
 				}
-				if($alert && !$muted){
-					echo '<embed height="0" width="0" src="/sounds/alert.mp3">';
+				if($alert && !$muted && $this->config->item('enable_alarm')){
+					echo '<embed height="0" width="0" src="'.site_url('/sounds/alert.mp3').'">';
 				}
 				if($alert){
 					echo '<title>!!! WARNING !!!</title>';
@@ -186,7 +193,9 @@ $muted = (isset($_COOKIE['mute'])?$_COOKIE['mute']:0);
 	var $refresh = <?php echo $this->config->item('refresh');?>;
 	var $timer = false;
 	$(window).load(function() {
-		startTimer();
+		if($refresh > 0) {
+			startTimer();
+		}
   	});
 	function stopTimer(){
 		$('#refresh').html('(p)');
@@ -200,7 +209,8 @@ $muted = (isset($_COOKIE['mute'])?$_COOKIE['mute']:0);
 		$refresh--;
 		$('#refresh').html('('+$refresh+')');
 		if($refresh<=0){
-			location.href="/";
+			stopTimer();
+			location.href="<?php echo site_url() ?>";
 		}
 
 	}
